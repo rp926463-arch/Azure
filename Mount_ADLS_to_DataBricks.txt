@@ -24,7 +24,7 @@ Example Notebook : https://docs.databricks.com/_static/notebooks/adls-gen2-servi
 
 6)Create secret scope in databricks for azure key vault
 @@@Create Secreate scope
-https://adb-8415227121216421.1.azuredatabricks.net/?o=8415227121216421#secrets/createScope
+https://adb-841522791216421.1.azuredatabricks.net/?o=8415227121216421#secrets/createScope
 |_____________________________________________________________________|
 			Copy this thing from Notebook URL
 
