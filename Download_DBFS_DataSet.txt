@@ -1,0 +1,18 @@
+**********************************************************************************************************************************************
+Source :https://towardsdatascience.com/databricks-how-to-save-files-in-csv-on-your-local-computer-3d0c70e6a9ab
+
+df = spark.read.json("dbfs:/databricks-datasets/iot/iot_devices.json")
+
+#WRITE FILE TO DBFS use COALESCE(1) to get single part file
+#df.write.csv("/FileStore/out/seattle.csv", header=True, mode="overwrite")
+#df.coalesce(1).write.format("csv").option("header", True).save("/FileStore/out/seattle.csv")
+df.coalesce(1).write.format("parquet").option("header", True).save("/FileStore/out/seattle.parquet")
+
+#DOWNLOAD SAVED FILE FROM ABOVE
+#https://<databricks-instance-name>/files/tmp/out/Seattle.parquet
+#e.g
+#https://adb-8415227121216421.1.azuredatabricks.net/files/out/seattle.parquet/part-00000-tid-9013975945364545809-f50c5112-8f3b-4abe-982b-9ca5515aa3fc-63-1-c000.snappy.parquet?o=8415227121216421
+
+#remove files
+#dbutils.fs.rm("/FileStore/out/seattle.csv",True)
+**********************************************************************************************************************************************

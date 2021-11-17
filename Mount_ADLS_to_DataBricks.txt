@@ -1,0 +1,134 @@
+**********************************************************************************************************************************************
+---------------------------------------------------------
+Mount using OAuth 2.0 with an Azure service principal	|
+---------------------------------------------------------
+
+Source : 1)https://docs.databricks.com/data/data-sources/azure/adls-gen2/azure-datalake-gen2-sp-access.html
+	 2)https://towardsdatascience.com/mounting-accessing-adls-gen2-in-azure-databricks-using-service-principal-and-secret-scopes-96e5c3d6008b
+Example Notebook : https://docs.databricks.com/_static/notebooks/adls-gen2-service-principal.html
+
+1)Create ADLS Gen2 Account
+
+2)Create web application through app registration
+--copy clientID & tenantID
+--create client secret[copy secret value & secret ID]
+
+3)Create Key Vault to Store the secrets
+
+4)Store secret key in key vault(which is generated during App Registration)
+--generate & import secrete
+--value will be secrete value generated during App Registration 
+
+5)Give the permission to registred App to access ADLS
+--give access of ADLS to app registred as Storage blob contributor
+
+6)Create secret scope in databricks for azure key vault
+@@@Create Secreate scope
+https://adb-8415227121216421.1.azuredatabricks.net/?o=8415227121216421#secrets/createScope
+|_____________________________________________________________________|
+			Copy this thing from Notebook URL
+
+DNS Name will be vault URI ---KeyVault propertise
+
+7)create mount point for ADLS in databricks
+
+configs = {"fs.azure.account.auth.type": "OAuth",
+          "fs.azure.account.oauth.provider.type": "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
+          "fs.azure.account.oauth2.client.id": "<application-id>",
+          "fs.azure.account.oauth2.client.secret": dbutils.secrets.get(scope="<scope-name>",key="<service-credential-key-name>"),
+          "fs.azure.account.oauth2.client.endpoint": "https://login.microsoftonline.com/<directory-id>/oauth2/token"}
+
+# Optionally, you can add <directory-name> to the source URI of your mount point.
+dbutils.fs.mount(
+  source = "abfss://<container-name>@<storage-account-name>.dfs.core.windows.net/",
+  mount_point = "/mnt/<mount-name>",
+  extra_configs = configs)
+
+8)Load data from ADLS and create dataframe in Azure dataBricks
+dbutils.fs.ls("/mnt/kradls")
+df = spark.read.csv("/mnt/kradls/Sales/Seattle.csv", inferSchema=True, header=True)
+
+#List all mount points in Azure Databricks
+dbutils.fs.mounts()
+
+______________________________________________________________________________________________________________________
+
+<application-id> : client ID created during App registration
+<scope-name> : scope name
+<service-credential-key-name> : key vault secret key name
+<directory-id> : tenant ID copied during app registration
+______________________________________________________________________________________________________________________
+
+
+
+
+
+
+client ID
+f-2073f0-882e-4087-baec-64e8e7d3d33a
+
+tenant
+a-000236-0406-45f9-b95f-d7f32bc39886
+
+secret value
+9-l7Q~xWDhyhkKz3fS3K1gIkglwDKUzXfLc2p
+
+secret ID
+b-c87166-a891-40de-9df8-505d93094c0f
+
+
+
+**********************************************************************************************************************************************
+-----------------------------------------
+Mount using StorageAccessKey Directly	|
+-----------------------------------------
+
+storageAccountName = "teststorage19923"
+storageAccountAccessKey = "1suslr-JJcbHUf3MGYZVCvOiT85c74z1WVnzdmF/QIxf2HeP9kiq4OfBMCPf/OjERNw/Nu8dms1ZyDI4z0asDg=="
+blobContainerName = "development"
+ 
+try:
+    dbutils.fs.mount(
+        source = "wasbs://{}@{}.blob.core.windows.net".format(blobContainerName, storageAccountName),
+        mount_point = "/mnt/FileStore/MountFolder/",
+        extra_configs = {'fs.azure.account.key.' + storageAccountName + '.blob.core.windows.net': storageAccountAccessKey}
+  )
+except Exception as e:
+    print("already mounted. Try to unmount first")
+
+dbutils.fs.ls("/mnt/FileStore/MountFolder/Sales")
+df = spark.read.csv("/mnt/FileStore/MountFolder/Sales/Seattle.csv")
+
+**********************************************************************************************************************************************
+-----------------------------------------
+Mount using SAS Token			|
+-----------------------------------------
+# Azure storage access info
+blob_account_name = "azureopendatastorage"
+blob_container_name = "citydatacontainer"
+blob_relative_path = "Safety/Release/city=Seattle"
+blob_sas_token = r""
+
+# Allow SPARK to read from Blob remotely
+wasbs_path = 'wasbs://%s@%s.blob.core.windows.net/%s' % (blob_container_name, blob_account_name, blob_relative_path)
+spark.conf.set(
+  'fs.azure.sas.%s.%s.blob.core.windows.net' % (blob_container_name, blob_account_name),
+  blob_sas_token)
+print('Remote blob path: ' + wasbs_path)
+
+# SPARK read parquet, note that it won't load any data yet by now
+df = spark.read.csv(wasbs_path)
+print('Register the DataFrame as a SQL temporary view: source')
+df.createOrReplaceTempView('source')
+
+
+
+
+________________________________________________________________________________________________________________________
+@@@@Securely connect to ADLS Gen2 from Azure DataBricks
+
+https://cloudblogs.microsoft.com/industry-blog/en-gb/technetuk/2020/08/20/secure-access-to-storage-azure-databricks-and-azure-data-lake-storage-gen2-patterns/
+
+https://databricks.com/blog/2020/02/28/securely-accessing-azure-data-sources-from-azure-databricks.html#:~:text=%20Securely%20Accessing%20Azure%20Data%20Sources%20from%20Azure,available%20to%20access%20Azure%20data%20services...%20More%20
+
+
