@@ -1,0 +1,12 @@
+jdbcHostname = "testserver19923.database.windows.net"
+jdbcDatabase = "testDB"
+jdbcPort = 1433
+jdbcUrl = "jdbc:sqlserver://{0}:{1};database={2}".format(jdbcHostname, jdbcPort, jdbcDatabase)
+connectionProperties = {
+"user" : "azureuser",
+"password" : "password",
+"driver" : "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+}
+
+Spdf = spark.read.jdbc(url=jdbcUrl, table="[dbo].[Gender_M]", properties=connectionProperties)
+display(Spdf)
