@@ -1,0 +1,4 @@
+You can debug function locally using debugger:
+https://swaminathanvetri.in/2020/02/07/debugging-azure-functions-locally-in-vs-code/
+
+--You must have the Azure Functions Core Tools installed to debug your local functions
