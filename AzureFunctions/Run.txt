@@ -1,7 +1,15 @@
+VSC
 
-Whwn you install azure function tools it should automatically install azure account extension. which is required to sign in to azure
+When you install azure function tools it should automatically install azure account extension. which is required to sign in to azure
 
 You can debug function locally using debugger:
 https://swaminathanvetri.in/2020/02/07/debugging-azure-functions-locally-in-vs-code/
 
 --You must have the Azure Functions Core Tools installed to debug your local functions
+________________________________________
+Visual Studio 2022
+
+run using
+ctr+f5
+
+
